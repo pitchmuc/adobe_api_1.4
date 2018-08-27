@@ -437,11 +437,6 @@ def _csdmpr(j_report):
     dim = [x['name'] for x in dict_overview['elements']]
     ###Check what kind of report it is
     report_type = dict_overview['type']
-#    if report_type =='ranked' or report_type =='overtime':
-#          length_dim = len(dim)
-#    elif report_type=='trended':##Add the date as one of the dimension
-#          length_dim = len(dim)+1
-    ###column of the future DataFrame
     if report_type =='ranked' or report_type =='overtime':
           columns = dim+metrics
     elif report_type=='trended':
