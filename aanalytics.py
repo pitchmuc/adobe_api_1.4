@@ -320,6 +320,9 @@ def _checkStatement(statement):
                 try:
                     if stat_json['reportDescription']['source'] == 'warehouse':
                         export = 'csv'
+                    else:
+                        export = 'json'
+                        del stat_json['reportDescription']['source']
                 except:
                     export = 'json'
         except:
@@ -330,11 +333,15 @@ def _checkStatement(statement):
         try:
             if stat_json['reportDescription']['source'] == 'warehouse':
                 export = 'csv'
+            else:
+                export = 'json'
+                del stat_json['reportDescription']['source']
         except:
             export = 'json'
     else : 
+        raise Exception("error with your statement. Please verify")
         print('error with your statement. Please verify')
-        exit
+        exit()
     return stat_json, export
 
 def _save_reportID(_report_id,_export):
