@@ -218,36 +218,7 @@ _dict_api = {
                 }
         }
 
-#_apliId,_secretApli,_reportsuite = self.__application_id()
-#Function
-def _retrieveDataElements(_data_admin,_prog):
-    elements = []
-    if _prog == 'evars': ##_prog = prog[1]
-        data=_data_admin[0]['evars']
-        elements = list(zip([x['id'] for x in data],[x['name'] for x in data]))#Comprehensive list to turn into df later
-    elif _prog == 'props':
-        data=_data_admin[0]['props']
-        elements = list(zip([x['id'] for x in data],[x['name'] for x in data]))
-    elif _prog == 'events':
-        data=_data_admin[0]['events']
-        elements = list(zip([x['id'] for x in data],[x['name'] for x in data]))
-    elif _prog == 'calcmetrics':
-        data = _data_admin
-        elements = list(zip([x['id'] for x in data],[x['name'] for x in data]))
-    elif _prog == 'segments':
-        data = _data_admin
-        elements = list(zip([x['id'] for x in data],[x['name'] for x in data]))
-    return elements
-
-##Output with Pandas
-def _writeFile(_data,_prog):
-    df=_pd.DataFrame(_data)
-    columns = ["id","name"]
-    df.columns = columns
-    df.to_csv(_new_path.as_posix()+'/'+_prog+'.csv',index=False)
-    return df
-
-#Current function display to the user
+#Function to retrieve Admin elements (evars, props, metrics, events, segments)
 def getElements(*elements,export=True,return_data=True):
     """
     This function can take multiple predefined arguments, as well as some optional key value pairs. 
@@ -269,45 +240,50 @@ def getElements(*elements,export=True,return_data=True):
     for element in elements:
         if element == 'evars':
             reqReport = _requests.post(url=_dict_api['endpoint'], params={"method": _dict_api['reportSuite']['geteVars'], "access_token": token},json=r_statement)
-            responseReport = reqReport.json()
-            raw_data = _retrieveDataElements(responseReport,element)
+            responseReport = reqReport.json()[0]
+            df_fullevars = _pd.DataFrame(responseReport['evars'])
+            order_cols = ['id','name','type','enabled','allocation_type','expiration_type','merchandising_syntax','expiration_custom_days','description']
+            df_order_evars = df_fullevars[order_cols]
             if export:
-                evars = _writeFile(raw_data,element)
-            df_all['evars'] = evars
+                df_order_evars.to_csv(_new_path.as_posix()+'/evars.csv',index=False)
+            df_all['evars'] = df_order_evars
         elif element == 'props':
             reqReport = _requests.post(url=_dict_api['endpoint'], params={"method": _dict_api['reportSuite']['getprops'], "access_token": token},json=r_statement)
-            responseReport = reqReport.json()
-            raw_data = _retrieveDataElements(responseReport,element)
-            if export :
-                props = _writeFile(raw_data,element)
-            df_all['props'] = props
+            responseReport = reqReport.json()[0]
+            df_fullprops = _pd.DataFrame(responseReport['props'])
+            order_cols = ['id','name','enabled','participation_enabled','pathing_enabled','list_enabled','list_delimiter','case_insensitive','case_insensitive_date_enabled','description']
+            df_order_props = df_fullprops[order_cols]
+            if export:
+                df_order_props.to_csv(_new_path.as_posix()+'/props.csv',index=False)
+            df_all['props'] = df_order_props
         elif element == 'events':
             reqReport = _requests.post(url=_dict_api['endpoint'], params={"method": _dict_api['reportSuite']['getevents'], "access_token": token},json=r_statement)
-            responseReport = reqReport.json()
-            raw_data = _retrieveDataElements(responseReport,element)
-            if export : 
-                events = _writeFile(raw_data,element)
-            df_all['events']= events
+            responseReport = reqReport.json()[0]
+            df_fullevents = _pd.DataFrame(responseReport['events'])
+            order_cols = ['id','name','type','participation','serialization','polarity','description','default_metric','visibility']
+            df_order_events = df_fullevents[order_cols]
+            if export:
+                df_order_events.to_csv(_new_path.as_posix()+'/events.csv',index=False)
+            df_all['events']= df_order_events
         elif element == 'calcmetrics':
             reqReport = _requests.post(url=_dict_api['endpoint'], params={"method": _dict_api['calcmetrics']['getcalcmetrics'], "access_token": token},json=a_statement)
             responseReport = reqReport.json()
-            raw_data = _retrieveDataElements(responseReport,element)
-            if export : 
-                calcmetrics = _writeFile(raw_data,element)
-            df_all['calcmetrics'] = calcmetrics
+            df_calcMetrics = _pd.DataFrame(responseReport)
+            if export:
+                df_calcMetrics.to_csv(_new_path.as_posix()+'/calcmetrics.csv',index=False)
+            df_all['calcmetrics'] = df_calcMetrics
         elif element == 'segments':
             reqReport = _requests.post(url=_dict_api['endpoint'], params={"method": _dict_api['segments']['getsegments'], "access_token": token},json=a_statement)
             responseReport = reqReport.json()
-            raw_data = _retrieveDataElements(responseReport,element)
-            if export : 
-                segments = _writeFile(raw_data,element)
-            df_all['segments'] = segments
+            df_segments = _pd.DataFrame(responseReport)
+            if export:
+                df_segments.to_csv(_new_path.as_posix()+'/calcmetrics.csv',index=False)
+            df_all['segments'] = df_segments
             #something
     if export:##if the option has been selected
         print('Please find the data on this folder : '+_new_path.as_posix())
     if return_data : #if the option has been selected
-        return df_all
-    
+        return df_all    
 
 #function to check if the statement is correct.
 #Work with a file and a dict
